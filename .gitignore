@@ -1,0 +1,6 @@
+.env.local
+node_modules
+data
+build
+.DS_Store
+key

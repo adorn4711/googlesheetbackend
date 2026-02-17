@@ -1,0 +1,30 @@
+{
+  "name": "googlesheetbackend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "ts-node-dev --transpile-only --respawn src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node build/server.js",
+    "read-excel": "ts-node-dev --transpile-only src/readExcelRunner.ts"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "cors": "^2.8.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.19.2",
+    "google-auth-library": "^9.15.1",
+    "google-spreadsheet": "^4.1.2",
+    "googleapis": "^140.0.1",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.21",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^20.11.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.6.3"
+  }
+}
