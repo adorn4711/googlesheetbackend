@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless';
-import { WorkItem } from './workitem';
+import { WorkItem, WorkItem_with_parent } from './workitem';
+import { WorkItem_Entity } from './workitem_entity';
 import { loadJson } from './serviceJson';
 
 /**
@@ -106,10 +107,10 @@ export async function readWorkItemsFromDb(sql:any): Promise<WorkItem[]> {
     try {
         
         // Fetch all work items from database
-        const rows = await sql`SELECT id, title, verdict, estimate, description, estimate_explanation, parent_id FROM workitems`;
+        const rows:WorkItem_Entity[] = await sql`SELECT id, title, verdict, estimate, description, estimate_explanation, parent_id FROM workitems`;
         
         // Map database rows to WorkItem objects
-        const allItems = rows.map((row: any) => ({
+        const allItems:WorkItem_with_parent[] = rows.map((row: WorkItem_Entity) => ({
             id: row.id,
             title: row.title,
             verdict: row.verdict as 'yes' | 'no' | 'maybe',
@@ -121,17 +122,17 @@ export async function readWorkItemsFromDb(sql:any): Promise<WorkItem[]> {
         }));
         
         // Create a map for quick lookup
-        const itemMap = new Map<string, any>();
-        allItems.forEach(item => itemMap.set(item.id, item));
+        const itemMap = new Map<string, WorkItem_with_parent>();
+        allItems.forEach((item: WorkItem_with_parent) => itemMap.set(item.id, item));
         
         // Build the hierarchical structure
         const topLevelItems: WorkItem[] = [];
         
-        allItems.forEach(item => {
+        allItems.forEach((item: WorkItem_with_parent) => {
             if (item.parentId) {
                 // This is a subitem, add it to its parent's subitems
                 const parent = itemMap.get(item.parentId);
-                if (parent) {
+                if (parent && parent.subitems) {
                     parent.subitems.push(item);
                 }
             } else {
