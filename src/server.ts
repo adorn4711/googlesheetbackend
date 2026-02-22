@@ -1,11 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import jwt from 'jsonwebtoken';
+import type { SignOptions } from 'jsonwebtoken';
 import { getSpreadsheetSummary, getRows, DEFAULT_SPREADSHEET_ID } from './serviceGoogleSheet';
 import { WorkItem } from "./workitem";
 import { provideDataAsJson } from "./serviceExcel";
 import { loadJson, saveJson } from "./serviceJson";
 import { loadJsonDB, saveJsonDB } from "./servicedb";
+import { access } from 'fs';
 
 const app = express();
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
@@ -25,6 +28,49 @@ app.get('/health', (_req, res) => {
 app.get('/dbinfosecret', (_req, res) => {
   res.json({ key: process.env.DATABASE_URL  });
 });
+
+app.get('/testaccess', async (_req, res) => {
+  try {
+    isValidCredentials(res, 'testuser', 'testpassword');
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Unknown error' });
+  }
+});
+
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body ?? {};
+
+  if (typeof username !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ error: 'username and password are required' });
+  }
+  isValidCredentials(res, username, password);
+});
+
+function isValidCredentials(res: any, username: string, password: string): void {
+  const expectedUsername = process.env.AUTH_USER;
+  const expectedPassword = process.env.AUTH_PASSWORD;
+  const jwtSecret = process.env.JWT_SECRET;
+  const jwtExpiresIn = (process.env.JWT_EXPIRES_IN || '1h') as SignOptions['expiresIn'];
+
+  if (!expectedUsername || !expectedPassword || !jwtSecret) {
+     res.status(500).json({ error: 'Authentication is not configured' });
+     return;
+  }
+
+  if (username !== expectedUsername || password !== expectedPassword) {
+     res.status(401).json({ error: 'Invalid username or password' });
+     return;
+  }
+
+  const accessToken = jwt.sign(
+    { sub: username },
+    jwtSecret,
+    { expiresIn: jwtExpiresIn }
+  );
+
+  res.json({ accessToken });
+}
+
 
 app.post('/workitems/save', async (req, res) => {
   try {
