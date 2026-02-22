@@ -229,8 +229,8 @@ async function main() {
 }
 
 // Only run main if this file is executed directly (not imported)
-if (import.meta.main) {
-    main().catch((error) => {
-        console.error('Error in main function:', error);
-    });
-}
+//if (import.meta.main) {
+//    main().catch((error) => {
+//        console.error('Error in main function:', error);
+//    });
+//}
